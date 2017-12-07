@@ -10,12 +10,12 @@ def return_statements(fil):
     return [statement for statement in tree.body]
 
 def parse(statements):
-    no_imports = remove_imports(statements)
+    no_imports, imports = remove_imports(statements)
 
     computed_statements = []
 
     for statement in no_imports:
-        computed_statements.append(parse_statement(statement))
+        computed_statements.append(parse_statement(statement, imports))
     
     return computed_statements
 

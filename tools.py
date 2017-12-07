@@ -10,13 +10,19 @@ def remove_imports(statements):
 
     to_delete = []
 
+    imports = []
+
     for index, statement in enumerate(statements):
         if isinstance(statement, ast.Import) or isinstance(statement, ast.ImportFrom):
             to_delete.append(index)
+            if statement.names[0].asname == None:
+                imports.append(statement.names[0].name)
+            else:
+                imports.append(statement.names[0].asname)
 
     filtered_statements = [i for j, i in enumerate(statements) if j not in to_delete]
     
-    return filtered_statements
+    return filtered_statements, imports
 
 def evaluate_order(completed_statements):
     '''Switches up the order of the statements depending on if they were configured to be in front of others'''

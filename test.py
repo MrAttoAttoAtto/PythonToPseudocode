@@ -1,7 +1,11 @@
-if x != 1:
-    z = 2
-    y = 'yo'
-    if y >= 6:
-        cry_for_help("YAY")
-    else:
-        yeet()
+#import random
+
+i = []
+
+i[0] = 1
+
+random.randint.yoot(2)
+
+randint = 6
+
+random.randint(365126)
