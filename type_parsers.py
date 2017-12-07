@@ -12,6 +12,7 @@ TYPES_SUPPORTED = {
     "Str":"parse_string",
     "Compare":"parse_compare",
     "BinOp":"parse_binary_operation",
+    "UnaryOp":"parse_unary_operation",
     "Pass":"parse_pass",
     "While":"parse_while",
     "For":"parse_for",
@@ -35,6 +36,10 @@ BINARY_OPERATORS = {
     "BitXor":"^",
     "BitAnd":"&",
     "FloorDiv":"//"
+}
+
+UNARY_OPERATORS = {
+    "Not":"NOT"
 }
 
 IF_OPERATORS = {
@@ -67,6 +72,21 @@ def parse_statement(statement, imports=[]):
 
 def parse_assignment(statement):
     target = parse_statement(statement.targets[0])
+
+    try:
+        mabs_input = parse_statement(statement.value.func)
+        if mabs_input == 'input':
+            args = []
+
+            for arg in statement.value.args:
+                    args.append(parse_statement(arg))
+
+            if len(args) == 0:
+                return "INPUT {}".format(target)
+            else:
+                return "OUTPUT {}\nINPUT {}".format(', '.join(args), target)
+    except AttributeError:
+        pass
 
     value = parse_statement(statement.value)
 
@@ -103,6 +123,9 @@ def parse_call(statement):
 
     for arg in statement.args:
         args.append(parse_statement(arg))
+
+    if formatted_func == 'PRINT':
+        formatted_func = "OUTPUT"
 
     if len(args) != 0:
         formatted_args = ', '.join(args)
@@ -260,6 +283,13 @@ def parse_binary_operation(statement):
     operator = BINARY_OPERATORS[type(statement.op).__name__]
 
     return "{} {} {}".format(left, operator, right)
+
+def parse_unary_operation(statement):
+    target = parse_statement(statement.operand)
+
+    operator = UNARY_OPERATORS[type(statement.op).__name__]
+
+    return "{} {}".format(operator, target)
 
 def parse_subscript(statement):
     base = parse_statement(statement.value)
