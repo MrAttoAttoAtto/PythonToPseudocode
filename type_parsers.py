@@ -20,6 +20,8 @@ TYPES_SUPPORTED = {
     "List":"parse_list",
     "Subscript":"parse_subscript",
     "Index":"parse_index",
+    "NameConstant":"parse_name_constant",
+    "Tuple":"parse_list",
     "str":"pass_func"
 }
 
@@ -85,12 +87,16 @@ def parse_assignment(statement):
             args = []
 
             for arg in statement.value.args:
-                    args.append(parse_statement(arg))
+                args.append(parse_statement(arg))
 
             if len(args) == 0:
                 return "INPUT {}".format(target)
             else:
-                return "OUTPUT {}\nINPUT {}".format(', '.join(args), target)
+                formatted_args = ', '.join(args)
+
+                formatted_args = formatted_args.replace(" + ", ", ")
+                formatted_args = formatted_args.replace("\n", "\\n")
+                return "OUTPUT {}\nINPUT {}".format(formatted_args, target)
     except AttributeError:
         pass
 
@@ -109,6 +115,9 @@ def parse_string(statement):
 
 def parse_index(statement):
     return parse_statement(statement.value)+"+1"
+
+def parse_name_constant(statement):
+    return str(statement.value).upper()
 
 def parse_list(statement):
     conts = []
@@ -138,6 +147,7 @@ def parse_call(statement):
     if formatted_func == 'PRINT':
         formatted_func = "OUTPUT"
         formatted_args = formatted_args.replace(" + ", ", ")
+        formatted_args = formatted_args.replace("\n", "\\n")
 
     if statement.keywords != []:
         print("WARNING, SOME KWARGS WILL HAVE BEEN DELETED, THESE DO NOT EXIST IN PSEUDOCODE")

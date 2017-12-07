@@ -1,2 +1,2 @@
-for i in range(1,10, 3):
-    print(yoot)
+print("I am a piece of pseudocode.")
+input("Do you like pseudocode?")
