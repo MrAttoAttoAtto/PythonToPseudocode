@@ -13,6 +13,7 @@ TYPES_SUPPORTED = {
     "Compare":"parse_compare",
     "BinOp":"parse_binary_operation",
     "UnaryOp":"parse_unary_operation",
+    "BoolOp":"parse_boolean_operation",
     "Pass":"parse_pass",
     "While":"parse_while",
     "For":"parse_for",
@@ -40,6 +41,11 @@ BINARY_OPERATORS = {
 
 UNARY_OPERATORS = {
     "Not":"NOT"
+}
+
+BOOLEAN_OPERATORS = {
+    "And":"AND",
+    "Or":"OR"
 }
 
 IF_OPERATORS = {
@@ -124,13 +130,14 @@ def parse_call(statement):
     for arg in statement.args:
         args.append(parse_statement(arg))
 
-    if formatted_func == 'PRINT':
-        formatted_func = "OUTPUT"
-
     if len(args) != 0:
         formatted_args = ', '.join(args)
     else:
         formatted_args = ''
+
+    if formatted_func == 'PRINT':
+        formatted_func = "OUTPUT"
+        formatted_args = formatted_args.replace(" + ", ", ")
 
     if statement.keywords != []:
         print("WARNING, SOME KWARGS WILL HAVE BEEN DELETED, THESE DO NOT EXIST IN PSEUDOCODE")
@@ -217,6 +224,7 @@ def parse_for(statement):
     
     if func_id == 'range':
         args = statement.iter.args
+
         if len(args) == 1:
             bound = parse_statement(args[0])
             inter_iterate = '0 TO {}'.format(bound)
@@ -224,6 +232,11 @@ def parse_for(statement):
             bot_bound = parse_statement(args[0])
             top_bound = parse_statement(args[1])
             inter_iterate = "{} TO {}".format(bot_bound, top_bound)
+        elif len(args) == 3:
+            bot_bound = parse_statement(args[0])
+            top_bound = parse_statement(args[1])
+            step = parse_statement(args[2])
+            inter_iterate = "{} TO {} STEP {}".format(bot_bound, top_bound, step)
         
         iterate = "{} <- {}".format(target, inter_iterate)
     else:
@@ -244,7 +257,7 @@ def parse_for(statement):
     formatted_for_statements = '\n'.join(tabbed_for_statements)
 
     if statement.orelse == []:
-        return "FOR {} DO\n{}\nENDFOR".format(iterate, formatted_for_statements)
+        return "FOR {} DO\n{}\nNEXT {}".format(iterate, formatted_for_statements, target)
 
     else:
         for else_statement in statement.orelse:
@@ -256,7 +269,7 @@ def parse_for(statement):
 
         formatted_else_statements = '\n'.join(tabbed_else_statements)
 
-        return "for {} DO\n{}\nELSE\n{}\nENDFOR".format(iterate, formatted_for_statements, formatted_else_statements)
+        return "FOR {} DO\n{}\nELSE\n{}\nNEXT {}".format(iterate, formatted_for_statements, formatted_else_statements, target)
 
 
 def parse_expression(statement):
@@ -290,6 +303,16 @@ def parse_unary_operation(statement):
     operator = UNARY_OPERATORS[type(statement.op).__name__]
 
     return "{} {}".format(operator, target)
+
+def parse_boolean_operation(statement):
+    statements = []
+
+    operator = BOOLEAN_OPERATORS[type(statement.op).__name__]
+
+    for eval_statement in statement.values:
+        statements.append(parse_statement(eval_statement))
+    
+    return ' {} '.format(operator).join(statements)
 
 def parse_subscript(statement):
     base = parse_statement(statement.value)

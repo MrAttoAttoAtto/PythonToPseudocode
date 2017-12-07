@@ -1,1 +1,2 @@
-x = input("yoot")
+for i in range(1,10, 3):
+    print(yoot)
