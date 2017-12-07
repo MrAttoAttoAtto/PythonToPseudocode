@@ -1,5 +1,8 @@
 import ast
 
+class ParseError(Exception):
+    pass
+
 TYPES_SUPPORTED = {
     "Expr":"parse_expression",
     "Assign":"parse_assignment",
@@ -22,6 +25,7 @@ TYPES_SUPPORTED = {
     "Index":"parse_index",
     "NameConstant":"parse_name_constant",
     "Tuple":"parse_list",
+    "AugAssign":"parse_augmented_assignment",
     "str":"pass_func"
 }
 
@@ -61,16 +65,29 @@ IF_OPERATORS = {
     "NotIn":"NOT IN"
 }
 
+LOCAL_FUNCTIONS = []
+
 IMPORTS = []
+
+def parse_error(error, info, extd_info):
+    if error == 'key':
+        string = "Unfortunately, a command you tried to parse is not supported ({}). The code pertaining to this command is: {}".format(info, extd_info)
+    return string    
 
 def parse_statement(statement, imports=[]):
     '''Takes a statement and returns its completely parsed form (a string is unchanged)'''
-    global IMPORTS
+    global IMPORTS, CURRENT_LINE
 
     if IMPORTS == []:
         IMPORTS = imports
 
-    function_name = TYPES_SUPPORTED[type(statement).__name__]
+    #print(statement)
+
+    try:
+        function_name = TYPES_SUPPORTED[type(statement).__name__]
+    except KeyError as e:
+        error = parse_error("key", type(statement).__name__, ast.dump(statement))
+        raise ParseError(error)
 
     function = globals()[function_name]
 
@@ -78,8 +95,11 @@ def parse_statement(statement, imports=[]):
 
     return retval
 
-def parse_assignment(statement):
-    target = parse_statement(statement.targets[0])
+def parse_assignment(statement, operator=None):
+    try:
+        target = parse_statement(statement.targets[0])
+    except AttributeError:
+        target = parse_statement(statement.target)
 
     try:
         mabs_input = parse_statement(statement.value.func)
@@ -90,19 +110,29 @@ def parse_assignment(statement):
                 args.append(parse_statement(arg))
 
             if len(args) == 0:
-                return "INPUT {}".format(target)
+                if operator is None:
+                    return "INPUT {}".format(target)
+                else:
+                    return "INPUT temp\n{} <- {} {} temp".format(target, target, operator)
             else:
                 formatted_args = ', '.join(args)
 
                 formatted_args = formatted_args.replace(" + ", ", ")
                 formatted_args = formatted_args.replace("\n", "\\n")
-                return "OUTPUT {}\nINPUT {}".format(formatted_args, target)
+                if operator is not None:
+                    return "OUTPUT {}\nINPUT temp\n{} <- {} {} temp".format(formatted_args, target, target, operator)
+                else:
+                    return "OUTPUT {}\nINPUT {}".format(formatted_args, target)
+                
     except AttributeError:
         pass
 
     value = parse_statement(statement.value)
 
-    return "{} <- {}".format(target, value)
+    if operator is None:
+        return "{} <- {}".format(target, value)
+    else:
+        return "{} <- {} {} {}".format(target, target, operator, value)
 
 def parse_name(statement):
     return statement.id
@@ -149,10 +179,16 @@ def parse_call(statement):
         formatted_args = formatted_args.replace(" + ", ", ")
         formatted_args = formatted_args.replace("\n", "\\n")
 
+    elif formatted_func == '__COMMENT_PRIVATE_FUNC':
+        formatted_func = '//'
+
     if statement.keywords != []:
         print("WARNING, SOME KWARGS WILL HAVE BEEN DELETED, THESE DO NOT EXIST IN PSEUDOCODE")
     
-    return "({} {})".format(formatted_func, formatted_args)
+    if formatted_func != '//':
+        return "({} {})".format(formatted_func, formatted_args)
+    else:
+        return "{}{}".format(formatted_func, formatted_args)
 
 def parse_if(statement):
     test = parse_statement(statement.test)
@@ -210,7 +246,7 @@ def parse_while(statement):
     formatted_while_statements = '\n'.join(tabbed_while_statements)
 
     if statement.orelse == []:
-        return "WHILE {} DO\n{}\nENDWHILE".format(test, formatted_while_statements)
+        return "WHILE {}\n{}\nENDWHILE".format(test, formatted_while_statements)
 
     else:
         for else_statement in statement.orelse:
@@ -222,7 +258,7 @@ def parse_while(statement):
 
         formatted_else_statements = '\n'.join(tabbed_else_statements)
 
-        return "WHILE {} DO\n{}\nELSE\n{}\nENDWHILE".format(test, formatted_while_statements, formatted_else_statements)
+        return "WHILE {}\n{}\nELSE\n{}\nENDWHILE".format(test, formatted_while_statements, formatted_else_statements)
 
 def parse_for(statement):
     target = parse_statement(statement.target)
@@ -267,7 +303,7 @@ def parse_for(statement):
     formatted_for_statements = '\n'.join(tabbed_for_statements)
 
     if statement.orelse == []:
-        return "FOR {} DO\n{}\nNEXT {}".format(iterate, formatted_for_statements, target)
+        return "FOR {}\n{}\nNEXT {}".format(iterate, formatted_for_statements, target)
 
     else:
         for else_statement in statement.orelse:
@@ -279,7 +315,7 @@ def parse_for(statement):
 
         formatted_else_statements = '\n'.join(tabbed_else_statements)
 
-        return "FOR {} DO\n{}\nELSE\n{}\nNEXT {}".format(iterate, formatted_for_statements, formatted_else_statements, target)
+        return "FOR {}\n{}\nELSE\n{}\nNEXT {}".format(iterate, formatted_for_statements, formatted_else_statements, target)
 
 
 def parse_expression(statement):
@@ -330,8 +366,38 @@ def parse_subscript(statement):
 
     return "{}[{}]".format(base, index)
 
+def parse_augmented_assignment(statement):
+    operator = BINARY_OPERATORS[type(statement.op).__name__]
+
+    return parse_assignment(statement, operator)
+
 def parse_pass(statement):
     return 'PASS'
+
+def parse_function(statement):
+    func = statement.name
+
+    args = []
+
+    for arg in statement.args.args:
+        args.append(arg.arg)
+
+    formatted_args = ', '.join(args)
+
+    func_statements = []
+
+    for func_statement in statement.body:
+        func_statements.append(parse_statement(func_statement).split('\n'))
+
+    flattened_func = [item for sublist in func_statements for item in sublist]
+    
+    tabbed_func_statements = ['    '+i for i in flattened_func]
+
+    formatted_func_statements = '\n'.join(tabbed_func_statements)
+
+    LOCAL_FUNCTIONS.append(func)
+    
+    return "FUNCTION {}({})\n{}\nENDFUNCTION".format(func, formatted_args, formatted_func_statements)
 
 def pass_func(string):
     return string
