@@ -41,9 +41,11 @@ def activate_shell():
                 else:
                     break
 
-
-        tree = return_statements(statement)
-        print('\n'.join(parse(tree)))
+        try:
+            tree = return_statements(statement)
+            print('\n'.join(parse(tree)))
+        except SyntaxError as e:
+            print(str(e)+"\nStatement:\n\"\n" + statement + "\n\"\nerrored.")
 
 if __name__ == "__main__":
     #file_name = input("Filename: ")
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     
     tree = return_fil_statements(file_name)
 
-    parse_comments(open(file_name).read())
+    #parse_comments(open(file_name).read())
 
     #print(convert_to_string(tree))
 
@@ -68,4 +70,4 @@ if __name__ == "__main__":
 
     print('\n'.join(retval)+"\n")
 
-    #activate_shell()
+    activate_shell()
