@@ -1,8 +1,4 @@
-import random
+x = y[1:2:5]
 
-x = input("Hi")
-b = str(x)
-str(b)
-["hi"]
-g = int(b)
-bbbb = cool(input("Hi"))
+for i in range(1, 5, 7):
+    print("yoo")

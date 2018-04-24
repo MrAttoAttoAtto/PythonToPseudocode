@@ -5,6 +5,8 @@ TYPES_SUPPORTED = {
     "Assign":"parse_assignment",
     "FunctionDef":"parse_function",
     "Return":"parse_return",
+    "Break":"parse_break",
+    "Continue":"parse_continue",
     "If":"parse_if",
     "Attribute":"parse_attribute",
     "Call":"parse_call",
@@ -45,7 +47,8 @@ BINARY_OPERATORS = {
 
 UNARY_OPERATORS = {
     "Not":"NOT ",
-    "USub":"-"
+    "USub":"-",
+    "Invert":"~"
 }
 
 BOOLEAN_OPERATORS = {
@@ -96,8 +99,6 @@ def parse_statement(statement, imports=[]):
     except KeyError:
         error = parse_error("key", type(statement).__name__, ast.dump(statement))
         raise ParseError(error)
-
-    print(function_name)
 
     function = globals()[function_name]
 
@@ -154,7 +155,10 @@ def parse_string(statement):
     return '"' + statement.s + '"'
 
 def parse_index(statement):
-    return parse_statement(statement.value)+"+1"
+    try:
+        return str(int(parse_statement(statement.value))+1)
+    except ValueError:
+        return parse_statement(statement.value)+"+1"
 
 def parse_name_constant(statement):
     return str(statement.value).upper()
@@ -399,8 +403,6 @@ def parse_function(statement):
 
     for func_statement in statement.body:
         func_statements.append(parse_statement(func_statement).split('\n'))
-    
-    print(func_statements)
 
     flattened_func = [item for sublist in func_statements for item in sublist]
     
@@ -414,6 +416,12 @@ def parse_function(statement):
 
 def parse_return(statement):
     return "RETURN {}".format(parse_statement(statement.value))
+
+def parse_break(statement):
+    return "BREAK"
+
+def parse_continue(statement):
+    return "CONTINUE"
 
 def pass_func(string):
     return string
