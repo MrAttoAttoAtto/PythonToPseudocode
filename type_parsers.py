@@ -203,7 +203,10 @@ def parse_call(statement):
     if statement.keywords != []:
         print("WARNING, SOME KWARGS WILL HAVE BEEN DELETED, THESE DO NOT EXIST IN PSEUDOCODE")
 
-    return "({} {})".format(formatted_func, formatted_args)
+    if args == []:
+        return "({})".format(formatted_func)
+    else:
+        return "({} {})".format(formatted_func, formatted_args)
 
 def parse_if(statement):
     test = parse_statement(statement.test)
