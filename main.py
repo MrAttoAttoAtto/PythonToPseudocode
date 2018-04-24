@@ -24,8 +24,8 @@ def parse(statements):
             computed_statements.append(parse_statement(statement, imports))
         except RecursionError:
             raise ParseError("Your code has caused the parser to exceed the maximum recursion depth, try moving things onto different lines instead of calling them all on one line.")
-            computed_statements = ["ERROR, MAX RECURSTION DEPTH EXCEEDED"]
-            break
+            #computed_statements = ["ERROR, MAX RECURSTION DEPTH EXCEEDED"]
+            #break
 
     return computed_statements
 
@@ -70,4 +70,4 @@ if __name__ == "__main__":
 
     print('\n'.join(retval)+"\n")
 
-    activate_shell()
+    #activate_shell()

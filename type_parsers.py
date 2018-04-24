@@ -1,12 +1,10 @@
 import ast
 
-class ParseError(Exception):
-    pass
-
 TYPES_SUPPORTED = {
     "Expr":"parse_expression",
     "Assign":"parse_assignment",
     "FunctionDef":"parse_function",
+    "Return":"parse_return",
     "If":"parse_if",
     "Attribute":"parse_attribute",
     "Call":"parse_call",
@@ -46,7 +44,8 @@ BINARY_OPERATORS = {
 }
 
 UNARY_OPERATORS = {
-    "Not":"NOT"
+    "Not":"NOT ",
+    "USub":"-"
 }
 
 BOOLEAN_OPERATORS = {
@@ -65,18 +64,27 @@ IF_OPERATORS = {
     "NotIn":"NOT IN"
 }
 
+SPECIAL_FUNCTIONS = {
+    "INPUT":"parse_input"
+}
+
 LOCAL_FUNCTIONS = []
 
 IMPORTS = []
 
+class ParseError(Exception):
+    pass
+
 def parse_error(error, info, extd_info):
     if error == 'key':
         string = "Unfortunately, a command you tried to parse is not supported ({}). The code pertaining to this command is: {}".format(info, extd_info)
+    elif error == 'input':
+        string = "Unfortunately, input can only be used for assignment within pseudocode. The code pertaining to this command is: {}".format(extd_info)
     return string    
 
 def parse_statement(statement, imports=[]):
     '''Takes a statement and returns its completely parsed form (a string is unchanged)'''
-    global IMPORTS, CURRENT_LINE
+    global IMPORTS
 
     if IMPORTS == []:
         IMPORTS = imports
@@ -85,9 +93,11 @@ def parse_statement(statement, imports=[]):
 
     try:
         function_name = TYPES_SUPPORTED[type(statement).__name__]
-    except KeyError as e:
+    except KeyError:
         error = parse_error("key", type(statement).__name__, ast.dump(statement))
         raise ParseError(error)
+
+    print(function_name)
 
     function = globals()[function_name]
 
@@ -166,6 +176,10 @@ def parse_call(statement):
 
     args = []
 
+    if formatted_func == "INPUT":
+        error = parse_error("input", None, ast.dump(statement))
+        raise ParseError(error)
+
     for arg in statement.args:
         args.append(parse_statement(arg))
 
@@ -180,15 +194,12 @@ def parse_call(statement):
         formatted_args = formatted_args.replace("\n", "\\n")
 
     elif formatted_func == '__COMMENT_PRIVATE_FUNC':
-        formatted_func = '//'
+        return "//{}".format(formatted_args)
 
     if statement.keywords != []:
         print("WARNING, SOME KWARGS WILL HAVE BEEN DELETED, THESE DO NOT EXIST IN PSEUDOCODE")
-    
-    if formatted_func != '//':
-        return "({} {})".format(formatted_func, formatted_args)
-    else:
-        return "{}{}".format(formatted_func, formatted_args)
+
+    return "({} {})".format(formatted_func, formatted_args)
 
 def parse_if(statement):
     test = parse_statement(statement.test)
@@ -348,7 +359,7 @@ def parse_unary_operation(statement):
 
     operator = UNARY_OPERATORS[type(statement.op).__name__]
 
-    return "{} {}".format(operator, target)
+    return "{}{}".format(operator, target)
 
 def parse_boolean_operation(statement):
     statements = []
@@ -388,6 +399,8 @@ def parse_function(statement):
 
     for func_statement in statement.body:
         func_statements.append(parse_statement(func_statement).split('\n'))
+    
+    print(func_statements)
 
     flattened_func = [item for sublist in func_statements for item in sublist]
     
@@ -398,6 +411,9 @@ def parse_function(statement):
     LOCAL_FUNCTIONS.append(func)
     
     return "FUNCTION {}({})\n{}\nENDFUNCTION".format(func, formatted_args, formatted_func_statements)
+
+def parse_return(statement):
+    return "RETURN {}".format(parse_statement(statement.value))
 
 def pass_func(string):
     return string
