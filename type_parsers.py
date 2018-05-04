@@ -156,9 +156,9 @@ def parse_string(statement):
 
 def parse_index(statement):
     try:
-        return str(int(parse_statement(statement.value))+1)
+        return parse_statement(statement.value)
     except ValueError:
-        return parse_statement(statement.value)+"+1"
+        return statement.value
 
 def parse_name_constant(statement):
     return str(statement.value).upper()
