@@ -220,12 +220,12 @@ def parse_if(statement):
 
     flattened_true = [item for sublist in true_statements for item in sublist]
     
-    tabbed_true_statements = ['    '+i for i in flattened_true]
+    tabbed_true_statements = ['        '+i for i in flattened_true]
 
     formatted_true_statements = '\n'.join(tabbed_true_statements)
 
     if statement.orelse == []:
-        return "IF {} THEN\n{}\nENDIF".format(test, formatted_true_statements)
+        return "IF {}\n    THEN\n{}\nENDIF".format(test, formatted_true_statements)
 
     else:
         for else_statement in statement.orelse:
@@ -233,11 +233,11 @@ def parse_if(statement):
         
         flattened_else = [item for sublist in else_statements for item in sublist]
 
-        tabbed_else_statements = ['    '+i for i in flattened_else]
+        tabbed_else_statements = ['        '+i for i in flattened_else]
 
         formatted_else_statements = '\n'.join(tabbed_else_statements)
 
-        return "IF {} THEN\n{}\nELSE\n{}\nENDIF".format(test, formatted_true_statements, formatted_else_statements)
+        return "IF {}\n    THEN\n{}\nELSE\n{}\nENDIF".format(test, formatted_true_statements, formatted_else_statements)
 
 def parse_compare(statement):
     left = parse_statement(statement.left)
