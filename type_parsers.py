@@ -291,13 +291,13 @@ def parse_for(statement):
 
         if len(args) == 1:
             bound = parse_statement(args[0])
-            inter_iterate = '0 TO {}'.format(bound)
+            inter_iterate = '1 TO {}'.format(bound)
         elif len(args) == 2:
-            bot_bound = parse_statement(args[0])
+            bot_bound = parse_statement(args[0]) + 1
             top_bound = parse_statement(args[1])
             inter_iterate = "{} TO {}".format(bot_bound, top_bound)
         elif len(args) == 3:
-            bot_bound = parse_statement(args[0])
+            bot_bound = parse_statement(args[0]) + 1
             top_bound = parse_statement(args[1])
             step = parse_statement(args[2])
             inter_iterate = "{} TO {} STEP {}".format(bot_bound, top_bound, step)
