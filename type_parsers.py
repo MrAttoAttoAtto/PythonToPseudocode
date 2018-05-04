@@ -264,7 +264,7 @@ def parse_while(statement):
     formatted_while_statements = '\n'.join(tabbed_while_statements)
 
     if statement.orelse == []:
-        return "WHILE {}\n{}\nENDWHILE".format(test, formatted_while_statements)
+        return "WHILE {} DO\n{}\nENDWHILE".format(test, formatted_while_statements)
 
     else:
         for else_statement in statement.orelse:
