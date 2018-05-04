@@ -276,7 +276,7 @@ def parse_while(statement):
 
         formatted_else_statements = '\n'.join(tabbed_else_statements)
 
-        return "WHILE {}\n{}\nELSE\n{}\nENDWHILE".format(test, formatted_while_statements, formatted_else_statements)
+        return "WHILE {} DO\n{}\nELSE\n{}\nENDWHILE".format(test, formatted_while_statements, formatted_else_statements)
 
 def parse_for(statement):
     target = parse_statement(statement.target)
