@@ -29,14 +29,14 @@ def parse_comments(code):
 
     for line in code.split('\n'):
         #if len(line.split('#')) > 1:
-        new_line = line.replace("#", "__comment_private_func(", 1)
+        new_line = line.replace("#", "__comment_private_func(\"", 1)
         
         if new_line != line:
-            new_line += ')'
+            new_line += '")'
         
         new_code.append(new_line)
     
-    print('\n'.join(new_code))
+    return '\n'.join(new_code)
 
 def evaluate_order(completed_statements):
     '''Switches up the order of the statements depending on if they were configured to be in front of others'''

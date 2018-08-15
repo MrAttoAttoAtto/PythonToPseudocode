@@ -67,10 +67,6 @@ IF_OPERATORS = {
     "NotIn":"NOT IN"
 }
 
-SPECIAL_FUNCTIONS = {
-    "INPUT":"parse_input"
-}
-
 LOCAL_FUNCTIONS = []
 
 IMPORTS = []
@@ -198,7 +194,7 @@ def parse_call(statement):
         formatted_args = formatted_args.replace("\n", "\\n")
 
     elif formatted_func == '__COMMENT_PRIVATE_FUNC':
-        return "//{}".format(formatted_args)
+        return "(//{})".format(formatted_args[1:-1])
 
     if statement.keywords != []:
         print("WARNING, SOME KWARGS WILL HAVE BEEN DELETED, THESE DO NOT EXIST IN PSEUDOCODE")

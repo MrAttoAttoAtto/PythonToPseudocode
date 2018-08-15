@@ -7,11 +7,13 @@ def return_fil_statements(fil):
     '''Function to return the statement tree of a python file'''
 
     code = open(fil).read()
-    tree = ast.parse(code)
+    comm_code = parse_comments(code)
+    tree = ast.parse(comm_code)
     return [statement for statement in tree.body]
 
 def return_statements(code):
-    tree = ast.parse(code)
+    comm_code = parse_comments(code)
+    tree = ast.parse(comm_code)
     return [statement for statement in tree.body]
 
 def parse(statements):
@@ -45,7 +47,9 @@ def activate_shell():
             tree = return_statements(statement)
             print('\n'.join(parse(tree)))
         except SyntaxError as e:
-            print(str(e)+"\nStatement:\n\"\n" + statement + "\n\"\nerrored.")
+            print(str(e) + "\n")
+        except ParseError as e:
+            print(str(e) + "\n")
 
 if __name__ == "__main__":
     #file_name = input("Filename: ")
@@ -70,4 +74,4 @@ if __name__ == "__main__":
 
     print('\n'.join(retval)+"\n")
 
-    #activate_shell()
+    activate_shell()
